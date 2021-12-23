@@ -127,3 +127,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.secret*
+*.sw?
+build/
+TODO.md
+coverage/
+coverage.json
+build/
+cache/
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*
+boilerplate-*.tf*
+__pycache__
