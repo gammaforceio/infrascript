@@ -47,7 +47,7 @@ SECTIONS = {
 }
 ```
 
-# Standard command
+# Standard invocation
 
 This command is packaged as a Docker image. To function properly, it requires
 that you invoke it with the necessary parameters. The reasons for each will
@@ -74,13 +74,20 @@ as root, this can result with files owned by root on the host system.
 
 * `--volume "$(pwd):/terraform" --workdir "/terraform"`
 
-Specifically, pwd should be the Git root of the repository in which the
-Terraform files live.
+Specifically, pwd should be the `infra/` directory.
 
 * `--env ...`
 
 You need to provide the AWS credentials so that Terraform can do what it
 needs to do.
+
+## SCM organization and SCM repository
+
+The infra script namespaces all the Terraform state files and outputs with the
+SCM organization and repository. You must provide these values as environment
+variables.
+
+The `invoke` script within this repository does everything necessary.
 
 # Limitations
 
