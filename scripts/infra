@@ -11,36 +11,27 @@ import subprocess
 import sys
 from tempfile import NamedTemporaryFile
 
+sys.path.insert(0, '/scripts')
+from lookup_output import LookupOutput, get_outputs_key
+
 # TODO:
 # * Create a method that writes to a tempfile and use it within
 #   write_tf_backend_file() and write_tfvars_file()
 
 # Assumptions:
-# * We're at the git root
+# * ???
 def load_definitions_file():
-    os.chdir('scripts')
-    # Add the scripts directory to the module search path so that
-    # definitions.py can load the LookupOutput class.
-    sys.path.insert(0, os.getcwd())
-    os.chdir('..')
-
-    os.chdir('infra')
-
     # We have to add the current directory to the module search path because
     # even though "." is appended, that's the directory the script was executed
     # from. We've already changed directory once, so make sure we have the
-    # current directory there. In addition, we want our things called
-    # definitions to be picked first - don't allow for conflicts just because
-    # someone installed something somewhere.
-    # NOTE: This problem goes away once we package infra in a Docker container
-    # built on top of the Terraform container.
+    # current directory there.
     sys.path.insert(0, os.getcwd())
 
     # This is a file we require to exist in order for this script to know what
     # to do. It must live in the infra/ directory.
     #
-    # TODO: Make sure this file exists, compiles properly, provides this
-    # function, and which returns an appropriate data structure.
+    # TODO: Make sure this file exists, compiles properly, and provides these
+    # data structures.
     from definitions import GLOBALS, SECTIONS
 
     return GLOBALS, SECTIONS
@@ -59,43 +50,11 @@ def cleanup_boilerplate():
     os.system('rm -f boilerplate-*')
     os.system('rm -rf .terraform')
 
-# TODO: Verify that docker is installed and usable.
-def tf_docker_cmd():
-    return [
-        "docker", "run",
-
-        # Remove deleted containers
-        "--rm",
-
-        # These three lines make it so that Docker runs as the current user.
-        # This way, any files created by the Docker container are created by the
-        # user instead of root (as would happen by default). The user likely
-        # doesn't exist in the container, but that's okay. The resulting files
-        # are owned by the running user.
-        "--user", f"{os.getuid()}:{os.getgid()}",
-
-        # This is needed so that plugins can be installed. This is Google's DNS.
-        "--dns", "8.8.8.8",
-
-        # This brings the git repository into the Docker container and set it
-        # as the working directory.
-        "--volume", f"{os.getcwd()}:/terraform",
-        "--workdir", "/terraform",
-
-        # This brings the AWS environment variables into the Docker container
-        "--env", f"AWS_ACCESS_KEY_ID={os.getenv('AWS_ACCESS_KEY_ID', '')}",
-        "--env", f"AWS_SECRET_ACCESS_KEY={os.getenv('AWS_SECRET_ACCESS_KEY', '')}",
-        "--env", f"AWS_SESSION_TOKEN={os.getenv('AWS_SESSION_TOKEN', '')}",
-
-        # Specify the container.
-        f"hashicorp/terraform:{TF_VERSION}",
-    ]
-
 def write_tf_backend_file(
     bucket, region, dynamodb_table,
-    project, environment, section,
+    org, repo, environment, section,
 ):
-    key = f"terraform/state/{project}/{environment}/{section}.tfstate"
+    key = f"terraform/state/{org}/{repo}/{environment}/{section}.tfstate"
 
     tempfile = NamedTemporaryFile(dir='.', prefix='boilerplate-', suffix='.tf', delete=False)
     with open(tempfile.name, 'w') as fh:
@@ -137,7 +96,7 @@ def write_tfvars_file(GLOBALS, global_values, section_values):
 
 # q.v. https://learn.hashicorp.com/tutorials/terraform/automate-terraform
 def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[]):
-    cmd = tf_docker_cmd()
+    cmd = ['terraform']
 
     cmd.append(subcmd)
 
@@ -164,12 +123,12 @@ def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[]):
     print(f"Running {subcmd}")
     return run_command(cmd)
 
-def save_outputs(bucket, project, environment, section):
+def save_outputs(bucket, org, repo, environment, section):
     outputs = run_terraform("output",
         options=['-json'],
     )
 
-    key = get_outputs_key(project, environment, section)
+    key = get_outputs_key(org, repo, environment, section)
     s3 = boto3.resource('s3')
     s3.Object(bucket, key).put(Body=outputs)
 
@@ -181,18 +140,10 @@ def run_command(cmd):
         cmd, stdout=subprocess.PIPE,
     ).communicate()[0].rstrip().decode('utf-8')
 
-# Ensure we're always within the root directory of the Git repository. This
-# simplifies the rest of the code.
-# TODO: This needs to do exception handling and bounds checking.
-def ensure_in_git_root():
-    gitroot = run_command(['git', 'rev-parse', '--show-toplevel'])
-    os.chdir(gitroot)
-
-# TODO: This needs to do exception handling and bounds checking.
-# TODO: This needs to return an array of 2 values - org and repo.
-def get_project_name():
-    origin = run_command(['git', 'remote', 'get-url', 'origin'])
-    return origin.split(':')[1].split('.')[0]
+# TODO: This needs to handle and propagate failure
+def get_org_repo():
+    project = os.getenv('SCM_PROJECT')
+    return project.split('/')
 
 ################################################################################
 # Below here is the main code of this script. Everything above are the functions
@@ -204,12 +155,7 @@ def get_project_name():
 if __name__ == '__main__':
     # TODO: Ensure the AWS envvars are set
 
-    ensure_in_git_root()
-
-    # After this, we're in gitroot/infra
     GLOBALS, SECTIONS = load_definitions_file()
-
-    from lookup_output import LookupOutput, get_outputs_key
 
     args = parse_args(
         legal_sections=SECTIONS.keys(),
@@ -218,8 +164,7 @@ if __name__ == '__main__':
     # TODO: Make this an input parameter.
     environment = 'prod'
 
-    # TODO: Have this return (org,repo) tuple, not project.
-    project = get_project_name()
+    org, repo = get_org_repo()
 
     # Set ourselves in the right directory. This simplifies the rest of the code
     # The directory is either specified in the SECTIONS definition or defaults
@@ -235,7 +180,8 @@ if __name__ == '__main__':
             region=GLOBALS['region'],
             bucket=GLOBALS['backend']['bucket_name'],
             dynamodb_table=GLOBALS['backend']['dynamodb_table'],
-            project=project,
+            org=org,
+            repo=repo,
             environment=environment,
             section=args.section,
         )
@@ -245,7 +191,6 @@ if __name__ == '__main__':
         # These are the values that all sections must handle
         global_values={
             "environment": environment,
-            #"project": project,
 
             # This will be used by the boilerplate aws.tf file
             "region": GLOBALS['region'],
@@ -286,7 +231,8 @@ if __name__ == '__main__':
     if args.subcmd == 'apply':
         save_outputs(
             bucket=GLOBALS['backend']['bucket_name'],
-            project=project,
+            org=org,
+            repo=repo,
             environment=environment,
             section=args.section,
         )
