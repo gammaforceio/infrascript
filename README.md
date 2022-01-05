@@ -99,3 +99,8 @@ This has only been tested on \*nix-like systems, like Linux and OSX. This has
 
 This _should_ work in Azure and GCP, but has not been tested outside of AWS.
 It only uses Terraform commands, and so should function properly.
+
+# Contributing
+
+We're still figuring everything out. For now, fork, hack, then open a PR. All
+contributions are welcome! :)
