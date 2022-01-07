@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-ORGANIZATION=gammaforce
+ORGANIZATION=gammaforceio
 IMAGE=infra
 
 # TODO: Have this read from a version file in the repository.

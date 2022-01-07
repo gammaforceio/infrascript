@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 
 # TODO:
 # * Throw an error if we're not in a Git repository
@@ -24,4 +24,4 @@ exec docker run --rm \
     --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
     --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     --env SCM_PROJECT=$PROJECT_NAME \
-        gammaforce/infra:latest $@
+        gammaforceio/infra:latest $@
