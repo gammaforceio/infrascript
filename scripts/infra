@@ -74,7 +74,7 @@ terraform {{
 
     return os.path.basename(tempfile.name)
 
-def write_tfvars_file(GLOBALS, global_values, section_values):
+def write_tfvars_file(GLOBALS, global_values, section_values, org, repo, environment):
     # Currently, this only looks down a single level. It will need to be expand
     # to do a full walk if we need resolution further down.
     # q.v. https://code.activestate.com/recipes/577982/
@@ -82,6 +82,9 @@ def write_tfvars_file(GLOBALS, global_values, section_values):
         if isinstance(section_values[key], LookupOutput):
             section_values[key] = section_values[key].resolve(
                 bucket_name=GLOBALS['backend']['bucket_name'],
+                org=org,
+                repo=repo,
+                environment=environment,
             )
 
     output = global_values.copy()
@@ -196,6 +199,9 @@ if __name__ == '__main__':
             "region": GLOBALS['region'],
         },
         section_values=SECTIONS.get(args.section, {}).get('inputs', {}),
+        org=org,
+        repo=repo,
+        environment=environment,
     )
 
     # TODO: Generate the boilerplate aws.tf file with the region variable
