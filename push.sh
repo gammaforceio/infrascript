@@ -2,7 +2,7 @@
 
 ORGANIZATION=gammaforceio
 IMAGE=infra
-VERSION=0.0.1
+VERSION=0.0.2
 
 docker login --username $ORGANIZATION
 docker push "${ORGANIZATION}/${IMAGE}:${VERSION}"
