@@ -1,11 +1,13 @@
 #!/bin/bash -eu
 
+# Go to the top of the repository
+cd $(git rev-parse --show-toplevel)
+
 ORGANIZATION=gammaforceio
 IMAGE=infra
 
-# TODO: Have this read from a version file in the repository.
 # TODO: Have that version file be stored the image.
-VERSION=0.0.1
+VERSION=$(cat VERSION)
 
 docker build \
   --tag "${ORGANIZATION}/${IMAGE}:${VERSION}" \
