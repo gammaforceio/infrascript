@@ -117,14 +117,14 @@ def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[]):
         cmd.append(f'-var-file={tfvars_filename}')
 
     # TODO: Put this behind an "if debug"
-    #print(f"{' '.join(cmd)}")
+    #print(f"{' '.join(cmd)}", flush=True)
 
     # These lines are here in case you want to pause right before execution.
     #import time
     #time.sleep(1000)
 
-    print(f"Running {subcmd}")
-    return run_command(cmd)
+    print(f"Running {subcmd}", flush=True)
+    return run_command(cmd, stream=subcmd != 'init')
 
 def save_outputs(bucket, org, repo, environment, section):
     outputs = run_terraform("output",
@@ -135,13 +135,22 @@ def save_outputs(bucket, org, repo, environment, section):
     s3 = boto3.resource('s3')
     s3.Object(bucket, key).put(Body=outputs)
 
-    print(f"Outputs saved to s3://{bucket}/{key}")
+    print(f"Outputs saved to s3://{bucket}/{key}", flush=True)
 
 # TODO: This needs to handle and propagate failure
-def run_command(cmd):
-    return subprocess.Popen(
-        cmd, stdout=subprocess.PIPE,
-    ).communicate()[0].rstrip().decode('utf-8')
+def run_command(cmd, stream=False):
+    # We want to stream the results back to the user. We want to return
+    # success or failure to the invoker.
+    if stream:
+        return subprocess.run(
+            cmd,
+            capture_output=False,
+        )
+    # We're not streaming, so capture and return the output to the invoker.
+    else:
+        return subprocess.Popen(
+            cmd, stdout=subprocess.PIPE,
+        ).communicate()[0].rstrip().decode('utf-8')
 
 # TODO: This needs to handle and propagate failure
 def get_org_repo():
@@ -226,11 +235,12 @@ if __name__ == '__main__':
         options.append('-json')
 
     # Run the command we were asked to run.
-    output = run_terraform(args.subcmd,
+    rv = run_terraform(args.subcmd,
         options=options,
         tfvars_filename=tfvars_filename,
     )
-    print(output)
+    # TODO: Do something here with rv - it's a CompletedProcess object
+    # q.v. https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess
 
     # TODO: Add a remove_outputs() to be called when destroying
     # TODO: Add a read_outputs() to be used when reading
@@ -246,4 +256,4 @@ if __name__ == '__main__':
     cleanup_boilerplate()
 
     # Scripts should be clear when they succeed. A visual statement is helpful.
-    print("Ok")
+    print("Ok", flush=True)
