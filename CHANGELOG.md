@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* 0.0.4 (2022-01-11)
+
+Fix breaking bug in saving outputs when running apply
+
 * 0.0.3 (2022-01-10)
 
 Stream the plan/apply/destroy output
