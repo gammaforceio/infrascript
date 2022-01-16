@@ -10,10 +10,14 @@ TESTIMAGE=infratest
 # TODO: Have that version file be stored the image.
 VERSION=$(cat VERSION)
 
+VERSIONED_IMAGE="${ORGANIZATION}/${IMAGE}:${VERSION}"
+LATEST_IMAGE="${ORGANIZATION}/${IMAGE}:latest"
+FULL_TEST_IMAGE="${ORGANIZATION}/${TESTIMAGE}:latest"
+
 function build() {
   docker build \
-    --tag "${ORGANIZATION}/${IMAGE}:${VERSION}" \
-    --tag "${ORGANIZATION}/${IMAGE}:latest" \
+    --tag "${VERSIONED_IMAGE}" \
+    --tag "${LATEST_IMAGE}" \
       .
 }
 
@@ -22,8 +26,28 @@ function build_test() {
 
   docker build \
     -f Dockerfile.test \
-    --tag "${ORGANIZATION}/${TESTIMAGE}:latest" \
+    --tag "${FULL_TEST_IMAGE}" \
       .
+}
+
+function run_tests() {
+  docker run \
+    --rm \
+      "${FULL_TEST_IMAGE}"
+}
+
+function login_to_image() {
+  docker run \
+    --rm -it \
+    --entrypoint "/bin/sh" \
+      "${LATEST_IMAGE}"
+}
+
+function login_to_testimage() {
+  docker run \
+    --rm -it \
+    --entrypoint "/bin/sh" \
+      "${FULL_TEST_IMAGE}"
 }
 
 function push() {
