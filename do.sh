@@ -16,6 +16,7 @@ FULL_TEST_IMAGE="${ORGANIZATION}/${TESTIMAGE}:latest"
 
 function build() {
   docker build \
+    -q \
     --tag "${VERSIONED_IMAGE}" \
     --tag "${LATEST_IMAGE}" \
       .
@@ -25,15 +26,18 @@ function build_test() {
   build
 
   docker build \
+    -q \
     -f Dockerfile.test \
     --tag "${FULL_TEST_IMAGE}" \
       .
 }
 
 function run_tests() {
+  build_test
+
   docker run \
     --rm \
-      "${FULL_TEST_IMAGE}"
+      "${FULL_TEST_IMAGE}" "$@"
 }
 
 function login_to_image() {
@@ -66,7 +70,7 @@ function main() {
     exit 1
   fi
 
-  $cmd
+  $cmd "$@"
 }
 
 main "$@"
