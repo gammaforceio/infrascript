@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* 0.0.5 (2022-01-16)
+
+Improve code by adding a test suite
+
 * 0.0.4 (2022-01-11)
 
 Fix breaking bug in saving outputs when running apply

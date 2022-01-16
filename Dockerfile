@@ -7,6 +7,6 @@ RUN pip3 install boto3
 
 COPY scripts /scripts
 
-ENTRYPOINT ["/scripts/infra"]
+ENTRYPOINT ["/scripts/infra.py"]
 
 CMD ["--help"]
