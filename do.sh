@@ -40,7 +40,7 @@ function run_tests() {
   docker run \
     --user "$(id -u):$(id -g)" \
     --rm \
-    --volume "$(pwd)/htmlcov:/scripts/htmlcov" \
+    --volume "$(pwd)/htmlcov:/opt/infra/htmlcov" \
       "${FULL_TEST_IMAGE}" "$@"
 }
 
@@ -62,7 +62,7 @@ function login_to_testimage() {
   docker run \
     --user "$(id -u):$(id -g)" \
     --rm -it \
-    --volume "$(pwd)/htmlcov:/scripts/htmlcov" \
+    --volume "$(pwd)/htmlcov:/opt/infra/htmlcov" \
     --entrypoint "/bin/sh" \
       "${FULL_TEST_IMAGE}"
 }

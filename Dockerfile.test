@@ -7,8 +7,8 @@ RUN pip3 install \
       pytest-describe \
       coverage
 
-COPY tests /scripts/tests
+COPY tests /opt/infra/tests
 
-WORKDIR "/scripts"
+WORKDIR "/opt/infra"
 
-ENTRYPOINT ["/scripts/tests/run_with_coverage.sh"]
+ENTRYPOINT ["/opt/infra/tests/run_with_coverage.sh"]

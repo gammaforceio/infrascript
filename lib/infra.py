@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # vim: set ft=python:sw=4:ts=4
 
-TF_VERSION = "1.1.1"
-
 import argparse
 import boto3
 import json
@@ -11,7 +9,8 @@ import subprocess
 import sys
 from tempfile import NamedTemporaryFile
 
-sys.path.insert(0, '/scripts')
+# This location is set within the Dockerfile.
+sys.path.insert(0, '/opt/infra/lib')
 from lookup_output import LookupOutput, get_outputs_key
 
 # TODO:

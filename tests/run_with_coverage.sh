@@ -7,9 +7,9 @@
 
 # Write the coverage database to htmlcov which is a directory the running user can
 # write to.
-export COVERAGE_FILE="/scripts/htmlcov/.coverage"
+export COVERAGE_FILE="/opt/infra/htmlcov/.coverage"
 
-coverage run -m pytest "$@"
+coverage run --source=/opt/infra/lib -m pytest "$@"
 coverage html
 
 echo "You can now open htmlcov/index.html for coverage statistics"
