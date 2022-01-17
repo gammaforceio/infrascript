@@ -116,3 +116,10 @@ following functions:
 * `push`
 * `login_to_image`
 * `login_to_testimage`
+
+## Testing
+
+The tests are run within a second Docker container.
+
+Test coverage is collected and written to `htmlcov/`. There is a minimum
+coverage requirement set within `tests/pytest.ini`.

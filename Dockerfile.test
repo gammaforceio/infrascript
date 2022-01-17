@@ -2,13 +2,23 @@ FROM gammaforceio/infra:latest
 
 # Figure out how to make this a second FROM so we don't reinstall these modules
 # every time we run a test
+# TODO: Move this into a requirements.txt file
 RUN pip3 install \
       pytest \
-      pytest-describe \
-      coverage
+      pytest-cov \
+      pytest-describe
 
 COPY tests /opt/infra/tests
 
+# Ensure pytest picks up our configuration, but we want to keep the config
+# file segregated with the tests.
+COPY tests/pytest.ini /opt/infra/
+
 WORKDIR "/opt/infra"
 
-ENTRYPOINT ["/opt/infra/tests/run_with_coverage.sh"]
+# /opt/infra/htmlcov is mounted as a volume so that it can be written to by
+# the host user. Change the location of the coverage database so that the user
+# can write to it because everything else is owned by root.
+ENV COVERAGE_FILE="/opt/infra/htmlcov/.coverage"
+
+ENTRYPOINT ["pytest"]

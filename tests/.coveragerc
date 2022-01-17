@@ -1,0 +1,16 @@
+# vim: set ft=dosini:sw=4:ts=4
+# https://coverage.readthedocs.io/en/latest/config.html
+
+[run]
+# We want branch and statement coverage, not just statement coverage
+branch = True
+
+# This is the default, but be absolutely specific about this
+cover_pylib = False
+
+[report]
+
+precision = 1
+
+# Don't bother showing files without executable code
+skip_empty = True
