@@ -104,3 +104,15 @@ It only uses Terraform commands, and so should function properly.
 
 We're still figuring everything out. For now, fork, hack, then open a PR. All
 contributions are welcome! :)
+
+## Devops/DevX
+
+There is a script at the root of this repository called `do.sh`. It has the
+following functions:
+
+* `build`
+* `build_test`
+* `run_tests`
+* `push`
+* `login_to_image`
+* `login_to_testimage`
