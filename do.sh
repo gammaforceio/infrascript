@@ -35,21 +35,34 @@ function build_test() {
 function run_tests() {
   build_test
 
+  mkdir -p htmlcov
+
   docker run \
+    --user "$(id -u):$(id -g)" \
     --rm \
+    --volume "$(pwd)/htmlcov:/scripts/htmlcov" \
       "${FULL_TEST_IMAGE}" "$@"
 }
 
 function login_to_image() {
+  build
+
   docker run \
+    --user "$(id -u):$(id -g)" \
     --rm -it \
     --entrypoint "/bin/sh" \
       "${LATEST_IMAGE}"
 }
 
 function login_to_testimage() {
+  build_test
+
+  mkdir -p htmlcov
+
   docker run \
+    --user "$(id -u):$(id -g)" \
     --rm -it \
+    --volume "$(pwd)/htmlcov:/scripts/htmlcov" \
     --entrypoint "/bin/sh" \
       "${FULL_TEST_IMAGE}"
 }

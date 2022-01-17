@@ -182,6 +182,7 @@ if __name__ == '__main__':
     # TODO: Make this an input parameter.
     environment = 'prod'
 
+    # TODO: Handle the None,None and the x,'' cases
     org, repo = get_org_repo()
 
     # Set ourselves in the right directory. This simplifies the rest of the code
