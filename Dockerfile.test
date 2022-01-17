@@ -1,0 +1,14 @@
+FROM gammaforceio/infra:latest
+
+# Figure out how to make this a second FROM so we don't reinstall these modules
+# every time we run a test
+RUN pip3 install \
+      pytest \
+      pytest-describe \
+      coverage
+
+COPY tests /scripts/tests
+
+WORKDIR "/scripts"
+
+ENTRYPOINT ["/scripts/tests/run_with_coverage.sh"]
