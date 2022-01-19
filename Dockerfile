@@ -7,6 +7,6 @@ RUN pip3 install boto3
 
 COPY lib /opt/infra/lib
 
-ENTRYPOINT ["/opt/infra/lib/infra.py"]
+ENTRYPOINT ["/opt/infra/lib/main.py"]
 
 CMD ["--help"]
