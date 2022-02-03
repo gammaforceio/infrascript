@@ -78,11 +78,12 @@ if __name__ == '__main__':
 
     options = []
 
-    # Force -auto-approve otherwise terraform apply will error out.
+    # Force -auto-approve otherwise terraform apply/destroy will error out.
     if args.subcmd == 'apply':
         options.append('-auto-approve')
-
-    if args.subcmd == 'output':
+    elif args.subcmd == 'destroy':
+        options.append('-auto-approve')
+    elif args.subcmd == 'output':
         # The output subcommand cannot handle the -var-file parameter.
         tfvars_filename = None
 

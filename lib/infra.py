@@ -100,13 +100,13 @@ def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[], s
 
     cmd.append(subcmd)
 
-    # We're running in automation, so always suppress -input
-    # TODO: Figure out why this broke when using --no-backend / --reconfigure
-    #cmd.append('-input=false')
-
     if reconfigure:
         cmd.append('-reconfigure')
         cmd.append('-force-copy')
+    else:
+        # We're running in automation, so always suppress -input
+        # TODO: Figure out why this broke using --no-backend / --reconfigure
+        cmd.append('-input=false')
 
     cmd = cmd + options
 
