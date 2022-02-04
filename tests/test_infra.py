@@ -1,7 +1,7 @@
 import pytest_describe
 
 import sys
-sys.path.insert(0, '/scripts')
+sys.path.insert(0, '/opt/infra/lib')
 from infra import get_org_repo
 
 def describe_get_org_repo():

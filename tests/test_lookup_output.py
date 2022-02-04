@@ -3,7 +3,7 @@
 import pytest_describe
 
 import sys
-sys.path.insert(0, '/scripts')
+sys.path.insert(0, '/opt/infra/lib')
 from lookup_output import get_outputs_key
 
 def describe_get_outputs_key():

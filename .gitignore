@@ -14,7 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# We want to store our code in lib/ - leaving this here in order to make it
+# clear that we're choosing to store code in lib/ vs the standard Python coding
+# practices.
+# lib/
 lib64/
 parts/
 sdist/

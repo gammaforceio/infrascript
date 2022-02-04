@@ -5,8 +5,8 @@ RUN apk add --no-cache --update python3 py3-pip
 
 RUN pip3 install boto3
 
-COPY scripts /scripts
+COPY lib /opt/infra/lib
 
-ENTRYPOINT ["/scripts/infra.py"]
+ENTRYPOINT ["/opt/infra/lib/main.py"]
 
 CMD ["--help"]
