@@ -78,6 +78,7 @@ if __name__ == '__main__':
 
     options = []
 
+    suppress_input = True
     # Force -auto-approve otherwise terraform apply/destroy will error out.
     if args.subcmd == 'apply':
         options.append('-auto-approve')
@@ -86,6 +87,7 @@ if __name__ == '__main__':
     elif args.subcmd == 'output':
         # The output subcommand cannot handle the -var-file parameter.
         tfvars_filename = None
+        suppress_input = False
 
         # Always display outputs in JSON
         options.append('-json')
@@ -93,6 +95,7 @@ if __name__ == '__main__':
     # Run the command we were asked to run.
     rv = run_terraform(args.subcmd,
         options=options,
+        suppress_input=suppress_input,
         tfvars_filename=tfvars_filename,
     )
     # TODO: Do something here with rv - it's a CompletedProcess object
