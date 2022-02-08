@@ -95,7 +95,7 @@ def write_tfvars_file(GLOBALS, global_values, section_values, org, repo, environ
     return os.path.basename(tempfile.name)
 
 # q.v. https://learn.hashicorp.com/tutorials/terraform/automate-terraform
-def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[], stream_output=True):
+def run_terraform(subcmd, tfvars_filename=None, suppress_input=True, reconfigure=False, options=[], stream_output=True):
     cmd = ['terraform']
 
     cmd.append(subcmd)
@@ -103,7 +103,7 @@ def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[], s
     if reconfigure:
         cmd.append('-reconfigure')
         cmd.append('-force-copy')
-    else:
+    elif suppress_input:
         # We're running in automation, so always suppress -input
         # TODO: Figure out why this broke using --no-backend / --reconfigure
         cmd.append('-input=false')
@@ -128,6 +128,7 @@ def run_terraform(subcmd, tfvars_filename=None, reconfigure=False, options=[], s
 def save_outputs(bucket, org, repo, environment, section):
     outputs = run_terraform("output",
         options=['-json'],
+        suppress_input=False,
         stream_output=False,
     )
 

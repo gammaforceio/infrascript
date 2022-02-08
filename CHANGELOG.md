@@ -1,5 +1,14 @@
 # CHANGELOG
 
+* 0.0.7 (2022-02-04)
+
+Fix a regression in 0.0.6 that broke saving output
+
+* 0.0.6 (2022-02-04)
+
+Significant refactoring
+Fix how destroy works to make it actually work. :)
+
 * 0.0.5 (2022-01-16)
 
 Improve code by adding a test suite
