@@ -95,7 +95,7 @@ def write_tfvars_file(GLOBALS, global_values, section_values, org, repo, environ
     return os.path.basename(tempfile.name)
 
 # q.v. https://learn.hashicorp.com/tutorials/terraform/automate-terraform
-def run_terraform(subcmd, tfvars_filename=None, suppress_input=True, reconfigure=False, options=[], stream_output=True):
+def run_terraform(subcmd, tfvars_filename=None, suppress_input=True, reconfigure=False, options=[], stream_output=True, suppress_verbiage=False):
     cmd = ['terraform']
 
     cmd.append(subcmd)
@@ -120,7 +120,7 @@ def run_terraform(subcmd, tfvars_filename=None, suppress_input=True, reconfigure
     #import time
     #time.sleep(1000)
 
-    if stream_output:
+    if stream_output and not suppress_verbiage:
         print(f"Running {subcmd}", flush=True)
 
     return run_command(cmd, stream=stream_output and subcmd != 'init')
