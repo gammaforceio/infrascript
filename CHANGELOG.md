@@ -1,5 +1,18 @@
 # CHANGELOG
 
+* 0.1.0 (2022-04-03)
+
+Add a `--environment` parameter which defaults to prod.
+
+* 0.0.8 (2022-03-26)
+
+`terraform output` now only prints the JSON. This makes the output subcommand
+more chainable.
+
+* 0.0.7 (2022-02-04)
+
+Fix a regression in 0.0.6 that broke saving output
+
 * 0.0.7 (2022-02-04)
 
 Fix a regression in 0.0.6 that broke saving output

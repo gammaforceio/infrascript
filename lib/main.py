@@ -27,9 +27,6 @@ if __name__ == '__main__':
         legal_sections=SECTIONS.keys(),
     )
 
-    # TODO: Make this an input parameter.
-    environment = 'prod'
-
     # TODO: Handle the None,None and the x,'' cases
     org, repo = get_org_repo()
 
@@ -49,7 +46,7 @@ if __name__ == '__main__':
             dynamodb_table=GLOBALS['backend']['dynamodb_table'],
             org=org,
             repo=repo,
-            environment=environment,
+            environment=args.environment,
             section=args.section,
         )
 
@@ -57,7 +54,7 @@ if __name__ == '__main__':
         GLOBALS=GLOBALS,
         # These are the values that all sections must handle
         global_values={
-            "environment": environment,
+            "environment": args.environment,
 
             # This will be used by the boilerplate aws.tf file
             "region": GLOBALS['region'],
@@ -65,7 +62,7 @@ if __name__ == '__main__':
         section_values=SECTIONS.get(args.section, {}).get('inputs', {}),
         org=org,
         repo=repo,
-        environment=environment,
+        environment=args.environment,
     )
 
     # TODO: Generate the boilerplate aws.tf file with the region variable
@@ -115,7 +112,7 @@ if __name__ == '__main__':
             bucket=GLOBALS['backend']['bucket_name'],
             org=org,
             repo=repo,
-            environment=environment,
+            environment=args.environment,
             section=args.section,
         )
 
