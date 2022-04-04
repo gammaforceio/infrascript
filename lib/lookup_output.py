@@ -25,8 +25,4 @@ class LookupOutput(object):
         s3 = boto3.resource('s3')
         blob = s3.Object(bucket_name, key).get()['Body'].read().decode('utf-8')
         data = json.loads(blob)
-        value = data.get(self.key)
-        if value:
-            return value.get('value')
-        else:
-            return None
+        return data.get(self.key, {}).get('value')

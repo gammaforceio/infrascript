@@ -70,10 +70,16 @@ if __name__ == '__main__':
 
     # TODO: Generate the boilerplate aws.tf file with the region variable
 
+    # The output subcommand's STDOUT needs to be parseable as JSON.
+    suppress_verbiage = False
+    if args.subcmd == 'output':
+        suppress_verbiage = True
+
     # Always run "terraform init". This is safe.
     run_terraform('init',
         reconfigure=args.reconfigure,
         tfvars_filename=tfvars_filename,
+        suppress_verbiage=suppress_verbiage,
     )
 
     options = []
@@ -97,6 +103,7 @@ if __name__ == '__main__':
         options=options,
         suppress_input=suppress_input,
         tfvars_filename=tfvars_filename,
+        suppress_verbiage=suppress_verbiage,
     )
     # TODO: Do something here with rv - it's a CompletedProcess object
     # q.v. https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess
@@ -115,4 +122,5 @@ if __name__ == '__main__':
     cleanup_boilerplate()
 
     # Scripts should be clear when they succeed. A visual statement is helpful.
-    print("Ok", flush=True)
+    if not suppress_verbiage:
+        print("Ok", flush=True)
