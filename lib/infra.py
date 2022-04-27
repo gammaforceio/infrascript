@@ -39,6 +39,7 @@ def parse_args(legal_sections):
     parser.add_argument('section', help="what are we subcmd'ing?", choices=legal_sections)
     parser.add_argument('--no-backend', action='store_true', help='skip TF backend')
     parser.add_argument('--reconfigure', action='store_true', help='Reconfigure state (used only when creating the TF backend')
+    parser.add_argument('--environment', default='prod', help='Environment (default: prod)')
 
     return parser.parse_args()
 
