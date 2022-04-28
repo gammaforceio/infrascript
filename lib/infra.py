@@ -3,6 +3,8 @@
 
 import argparse
 import boto3
+from collections.abc import Mapping, Sequence, Set
+from functools import reduce
 import json
 import os
 import subprocess
@@ -72,18 +74,63 @@ terraform {{
 
     return os.path.basename(tempfile.name)
 
-def write_tfvars_file(GLOBALS, global_values, section_values, org, repo, environment):
-    # Currently, this only looks down a single level. It will need to be expand
-    # to do a full walk if we need resolution further down.
-    # q.v. https://code.activestate.com/recipes/577982/
-    for key in section_values.keys():
-        if isinstance(section_values[key], LookupOutput):
-            section_values[key] = section_values[key].resolve(
+def _resolve_section_values(GLOBALS, section_values, org, repo, environment):
+    # The full walking code is at https://code.activestate.com/recipes/577982/.
+    # This is adapted to walk over and modify section_values.
+    string_types = (str, bytes)
+    iteritems = lambda mapping: getattr(mapping, 'iteritems', mapping.items)()
+    def __walk(obj, path=(), memo=None):
+        if memo is None:
+            memo = set()
+        iterator = None
+        if isinstance(obj, Mapping):
+            iterator = iteritems
+        elif isinstance(obj, (Sequence, Set)) and not isinstance(obj, string_types):
+            iterator = enumerate
+        if iterator:
+            if id(obj) not in memo:
+                memo.add(id(obj))
+                for key, value in iterator(obj):
+                    for result in __walk(value, path+(key,), memo):
+                        yield result
+                memo.remove(id(obj))
+        else:
+            yield path, obj
+
+    # This is unused, but provided for completeness
+    # def __get(obj, keys):
+    #     return reduce(lambda c,k: c.get(k, {}), keys, obj)
+    def __set(obj, keys, value):
+        keys = list(keys)
+        k = keys.pop(0)
+        while len(keys) > 0:
+            obj = obj[k]
+            k = keys.pop(0)
+        obj[k] = value
+
+
+    for path, value in __walk(section_values):
+        if isinstance(value, LookupOutput):
+            __set(section_values, path, value.resolve(
                 bucket_name=GLOBALS['backend']['bucket_name'],
                 org=org,
                 repo=repo,
                 environment=environment,
-            )
+            ))
+
+    return section_values
+
+def write_tfvars_file(GLOBALS, global_values, section_values, org, repo, environment):
+    # This modifies section_values's keys and values, so it does not need to be
+    # returned. The actual section_values dict object is unchanged, so Python's
+    # pass-by-value semantics are preserved.
+    _resolve_section_values(
+        GLOBALS=GLOBALS,
+        section_values=section_values,
+        org=org,
+        repo=repo,
+        environment=environment,
+    )
 
     output = global_values.copy()
     output.update(section_values)
