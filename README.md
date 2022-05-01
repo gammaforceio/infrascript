@@ -28,6 +28,7 @@ This is the file which controls how `infra` knows what to do.
 
 ```
 from lookup_output import LookupOutput
+from per_environment import PerEnvironment
 
 GLOBALS = {
     'region': <region>,
@@ -41,7 +42,7 @@ SECTIONS = {
     <section_name>: {
         'subdir': <dirname, defaults to section_name>,
         'inputs': {
-            <varname>: str | LookupOutput,
+            <varname>: str | LookupOutput | PerEnvironment,
         },
     },
 }

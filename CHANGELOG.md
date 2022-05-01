@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* 0.1.2 (2022-04-30)
+
+Added a PerEnvironment object to allow variable resolution per environment.
+
 * 0.1.1 (2022-04-27)
 
 The tfvars now resolve LookupOutput objects recursively, not just in level 1.
