@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* 0.1.1 (2022-04-27)
+
+The tfvars now resolve LookupOutput objects recursively, not just in level 1.
+
 * 0.1.0 (2022-04-03)
 
 Add a `--environment` parameter which defaults to prod.
@@ -8,10 +12,6 @@ Add a `--environment` parameter which defaults to prod.
 
 `terraform output` now only prints the JSON. This makes the output subcommand
 more chainable.
-
-* 0.0.7 (2022-02-04)
-
-Fix a regression in 0.0.6 that broke saving output
 
 * 0.0.7 (2022-02-04)
 
