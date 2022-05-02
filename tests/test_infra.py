@@ -10,6 +10,9 @@ from infra import (
 from lookup_output import (
     LookupOutput,
 )
+from per_environment import (
+    PerEnvironment,
+)
 
 def describe_get_org_repo():
     def without_envvar(monkeypatch):
@@ -128,3 +131,43 @@ def describe_resolve_section_values():
         _run_resolve_section_values(section_values)
 
         assert section_values == { 'x': [ 'value1' ] }
+
+    def per_environment_name_found():
+        section_values = {
+            'x': PerEnvironment(
+                prod=1,
+            ),
+        }
+
+        _run_resolve_section_values(section_values)
+
+        assert section_values == { 'x': 1 }
+
+    def per_environment_default_found():
+        section_values = {
+            'x': PerEnvironment(
+                __DEFAULT__=1,
+            ),
+        }
+
+        _run_resolve_section_values(section_values)
+
+        assert section_values == { 'x': 1 }
+
+    def per_environment_lookup_output(monkeypatch):
+        def myresolve(self, bucket_name, org, repo, environment):
+            return 'value1'
+        monkeypatch.setattr(LookupOutput, 'resolve', myresolve)
+
+        section_values = {
+            'x': PerEnvironment(
+                __DEFAULT__=LookupOutput(
+                    section='s1',
+                    key='k1',
+                ),
+            ),
+        }
+
+        _run_resolve_section_values(section_values)
+
+        assert section_values == { 'x': 'value1' }

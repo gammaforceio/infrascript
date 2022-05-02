@@ -12,6 +12,7 @@ import sys
 from tempfile import NamedTemporaryFile
 
 from lookup_output import LookupOutput, get_outputs_key
+from per_environment import EnvironmentNotFoundError, PerEnvironment
 
 # TODO:
 # * Create a method that writes to a tempfile and use it within
@@ -109,14 +110,25 @@ def _resolve_section_values(GLOBALS, section_values, org, repo, environment):
         obj[k] = value
 
 
+    # Resolve values in this order:
+    #   1. PerEnvironment
+    #   2. LookupOutput
+    # This allows PerEnvironment objects to reference LookupOutput objects.
     for path, value in __walk(section_values):
+        if isinstance(value, PerEnvironment):
+            value = value.resolve(
+                environment=environment,
+            )
+
         if isinstance(value, LookupOutput):
-            __set(section_values, path, value.resolve(
+            value = value.resolve(
                 bucket_name=GLOBALS['backend']['bucket_name'],
                 org=org,
                 repo=repo,
                 environment=environment,
-            ))
+            )
+
+        __set(section_values, path, value)
 
     return section_values
 
