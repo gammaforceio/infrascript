@@ -1,5 +1,10 @@
 # CHANGELOG
 
+* 0.1.3 (2022-05-03)
+
+Boilerplate the aws.tf file
+Add the ability to override the region used
+
 * 0.1.2 (2022-04-30)
 
 Added a PerEnvironment object to allow variable resolution per environment.

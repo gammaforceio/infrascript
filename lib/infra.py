@@ -51,6 +51,27 @@ def cleanup_boilerplate():
     os.system('rm -f boilerplate-*')
     os.system('rm -rf .terraform')
 
+def write_awstf_file():
+    tempfile = NamedTemporaryFile(dir='.', prefix='boilerplate-', suffix='.tf', delete=False)
+    with open(tempfile.name, 'w') as fh:
+        # The doubled-braces are to handle how f-strings deal with them.
+        # Otherwise, this will be a syntax error.
+        fh.write(f"""
+variable "region" {{
+  type = string
+  nullable = false
+}}
+
+provider aws {{
+  region = var.region
+}}
+
+data "aws_caller_identity" "current" {{}}
+        """)
+        fh.flush()
+
+    return os.path.basename(tempfile.name)
+
 def write_tf_backend_file(
     bucket, region, dynamodb_table,
     org, repo, environment, section,
