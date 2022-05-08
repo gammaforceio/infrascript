@@ -16,6 +16,7 @@ from infra import (
     write_tfvars_file,
     run_terraform,
     save_outputs,
+    write_awstf_file,
 )
 
 if __name__ == '__main__':
@@ -50,6 +51,7 @@ if __name__ == '__main__':
             section=args.section,
         )
 
+    section_values = SECTIONS.get(args.section, {}).get('inputs', {})
     tfvars_filename = write_tfvars_file(
         GLOBALS=GLOBALS,
         # These are the values that all sections must handle
@@ -57,13 +59,15 @@ if __name__ == '__main__':
             "environment": args.environment,
 
             # This will be used by the boilerplate aws.tf file
-            "region": GLOBALS['region'],
+            "region": section_values.get('region', GLOBALS['region']),
         },
-        section_values=SECTIONS.get(args.section, {}).get('inputs', {}),
+        section_values=section_values,
         org=org,
         repo=repo,
         environment=args.environment,
     )
+
+    write_awstf_file()
 
     # TODO: Generate the boilerplate aws.tf file with the region variable
 
