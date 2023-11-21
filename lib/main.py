@@ -12,7 +12,7 @@ from infra import (
     parse_args,
     get_org_repo,
 )
-from manager import AWSManager
+from manager import get_manager
 
 if __name__ == '__main__':
     # TODO: Ensure the IaaS (AWS/GCP) envvars are set
@@ -31,8 +31,7 @@ if __name__ == '__main__':
     # to the section name.
     os.chdir(SECTIONS[args.section].get('subdir', args.section))
 
-    # TODO: Specialize this appropriately
-    manager = AWSManager()
+    manager = get_manager(GLOBALS['type'])
 
     manager.cleanup_boilerplate()
 

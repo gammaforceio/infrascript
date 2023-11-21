@@ -22,6 +22,13 @@ def run_command(cmd, stream=False):
             cmd, stdout=subprocess.PIPE,
         ).communicate()[0].rstrip().decode('utf-8')
 
+def get_manager(iaas):
+    if iaas.lower() == 'aws':
+        return AWSManager()
+    if iaas.lower() == 'gcp':
+        return GCPManager()
+    raise ValueError(f"Unknown IaaS: {iaas}")
+
 class Manager:
     def __init__(self):
         self.tfvars_filename = None
@@ -162,3 +169,6 @@ data "aws_caller_identity" "current" {{}}
 
         print(f"Outputs saved to s3://{bucket}/{key}", flush=True)
 
+class GCPManager(Manager):
+    def __init__(self):
+        super().__init__()

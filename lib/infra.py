@@ -30,6 +30,37 @@ def load_definitions_file():
     # data structures.
     from definitions import GLOBALS, SECTIONS
 
+    have_error = False
+    if 'type' not in GLOBALS:
+        print("type not set in GLOBALS", file=sys.stderr)
+        have_error = True
+    elif GLOBALS['type'].lower() not in ['aws', 'gcp']:
+        print(f"{GLOBALS['type']} not in ('aws', 'gcp')", file=sys.stderr)
+        have_error = True
+    elif GLOBALS['type'].lower() == 'aws':
+        if 'backend' not in GLOBALS:
+            print("backend not set in GLOBALS", file=sys.stderr)
+            have_error = True
+        else:
+            if 'bucket_name' not in GLOBALS['backend']:
+                print("bucket_name not set in GLOBALS['backend']", file=sys.stderr)
+                have_error = True
+            if 'dynamodb_table' not in GLOBALS['backend']:
+                print("dynamodb_table not set in GLOBALS['backend']", file=sys.stderr)
+                have_error = True
+    elif GLOBALS['type'].lower() == 'gcp':
+        if 'backend' not in GLOBALS:
+            print("backend not set in GLOBALS", file=sys.stderr)
+            have_error = True
+        else:
+            if 'bucket_name' not in GLOBALS['backend']:
+                print("bucket_name not set in GLOBALS['backend']", file=sys.stderr)
+                have_error = True
+    # TODO: Verify that 'region' is set and has a correct value for 'type'
+
+    if have_error:
+        sys.exit(1)
+
     return GLOBALS, SECTIONS
 
 def parse_args(legal_sections):
