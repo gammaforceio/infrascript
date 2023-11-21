@@ -22,7 +22,11 @@ class LookupOutput(object):
             self.environment or environment,
             self.section,
         )
-        s3 = boto3.resource('s3')
-        blob = s3.Object(bucket_name, key).get()['Body'].read().decode('utf-8')
+        resource = self.__resource()
+        blob = resource.Object(bucket_name, key).get()['Body'].read().decode('utf-8')
         data = json.loads(blob)
         return data.get(self.key, {}).get('value')
+
+class LookupOutputAWS(LookupOutput):
+    def __resource(self):
+        return boto3.resource('s3')

@@ -11,16 +11,11 @@ from infra import (
     load_definitions_file,
     parse_args,
     get_org_repo,
-    cleanup_boilerplate,
-    write_tf_backend_file,
-    write_tfvars_file,
-    run_terraform,
-    save_outputs,
-    write_awstf_file,
 )
+from manager import AWSManager
 
 if __name__ == '__main__':
-    # TODO: Ensure the AWS envvars are set
+    # TODO: Ensure the IaaS (AWS/GCP) envvars are set
 
     GLOBALS, SECTIONS = load_definitions_file()
 
@@ -36,12 +31,15 @@ if __name__ == '__main__':
     # to the section name.
     os.chdir(SECTIONS[args.section].get('subdir', args.section))
 
-    cleanup_boilerplate()
+    # TODO: Specialize this appropriately
+    manager = AWSManager()
+
+    manager.cleanup_boilerplate()
 
     # There are a very few cases where we don't want to write a TF backend file.
     # Specifically, when we're creating the TF backend in the first place.
     if not args.no_backend:
-        write_tf_backend_file(
+        manager.write_tf_backend_file(
             region=GLOBALS['region'],
             bucket=GLOBALS['backend']['bucket_name'],
             dynamodb_table=GLOBALS['backend']['dynamodb_table'],
@@ -52,7 +50,7 @@ if __name__ == '__main__':
         )
 
     section_values = SECTIONS.get(args.section, {}).get('inputs', {})
-    tfvars_filename = write_tfvars_file(
+    manager.write_tfvars_file(
         GLOBALS=GLOBALS,
         # These are the values that all sections must handle
         global_values={
@@ -67,9 +65,7 @@ if __name__ == '__main__':
         environment=args.environment,
     )
 
-    write_awstf_file()
-
-    # TODO: Generate the boilerplate aws.tf file with the region variable
+    manager.write_awstf_file()
 
     # The output subcommand's STDOUT needs to be parseable as JSON.
     suppress_verbiage = False
@@ -77,9 +73,8 @@ if __name__ == '__main__':
         suppress_verbiage = True
 
     # Always run "terraform init". This is safe.
-    run_terraform('init',
+    manager.run_terraform('init',
         reconfigure=args.reconfigure,
-        tfvars_filename=tfvars_filename,
         suppress_verbiage=suppress_verbiage,
     )
 
@@ -92,18 +87,15 @@ if __name__ == '__main__':
     elif args.subcmd == 'destroy':
         options.append('-auto-approve')
     elif args.subcmd == 'output':
-        # The output subcommand cannot handle the -var-file parameter.
-        tfvars_filename = None
         suppress_input = False
 
         # Always display outputs in JSON
         options.append('-json')
 
     # Run the command we were asked to run.
-    rv = run_terraform(args.subcmd,
+    rv = manager.run_terraform(args.subcmd,
         options=options,
         suppress_input=suppress_input,
-        tfvars_filename=tfvars_filename,
         suppress_verbiage=suppress_verbiage,
     )
     # TODO: Do something here with rv - it's a CompletedProcess object
@@ -112,7 +104,7 @@ if __name__ == '__main__':
     # TODO: Add a remove_outputs() to be called when destroying
     # TODO: Add a read_outputs() to be used when reading
     if args.subcmd == 'apply':
-        save_outputs(
+        manager.save_outputs(
             bucket=GLOBALS['backend']['bucket_name'],
             org=org,
             repo=repo,
@@ -120,7 +112,7 @@ if __name__ == '__main__':
             section=args.section,
         )
 
-    cleanup_boilerplate()
+    manager.cleanup_boilerplate()
 
     # Scripts should be clear when they succeed. A visual statement is helpful.
     if not suppress_verbiage:
