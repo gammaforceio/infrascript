@@ -1,3 +1,5 @@
+# vim: set ft=python:sw=4:ts=4
+
 import pytest_describe
 
 import sys
@@ -45,16 +47,18 @@ def describe_get_org_repo():
 
 def describe_resolve_section_values():
     def _run_resolve_section_values(section_values):
-        manager = get_manager('aws')
-        manager.resolve_section_values(
-            section_values=section_values,
+        manager = get_manager(
             GLOBALS={
+                'type': 'aws',
                 'backend': {
                     'bucket_name': 'some-bucket',
                 },
             },
             org='org1',
             repo='repo1',
+        )
+        manager.resolve_section_values(
+            section_values=section_values,
             environment='prod',
         )
 

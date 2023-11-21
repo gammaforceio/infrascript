@@ -1,3 +1,5 @@
+# vim: set ft=python:sw=4:ts=4
+
 import boto3
 from collections.abc import Mapping, Sequence, Set
 #from functools import reduce
@@ -5,6 +7,10 @@ import json
 import os
 import subprocess
 from tempfile import NamedTemporaryFile
+
+# TODO:
+# * Create a method that writes to a tempfile and use it within
+#   write_tf_backend_file() and write_tfvars_file()
 
 from lookup_output import LookupOutput, get_outputs_key
 from per_environment import PerEnvironment
@@ -24,15 +30,20 @@ def run_command(cmd, stream=False):
             cmd, stdout=subprocess.PIPE,
         ).communicate()[0].rstrip().decode('utf-8')
 
-def get_manager(iaas):
-    if iaas.lower() == 'aws':
-        return AWSManager()
-    if iaas.lower() == 'gcp':
-        return GCPManager()
+def get_manager(GLOBALS, org, repo):
+    iaas = GLOBALS['type'].lower()
+    if iaas == 'aws':
+        return AWSManager(GLOBALS, org, repo)
+    if iaas == 'gcp':
+        return GCPManager(GLOBALS, org, repo)
     raise ValueError(f"Unknown IaaS: {iaas}")
 
 class Manager:
-    def __init__(self):
+    def __init__(self, GLOBALS, org, repo):
+        self.GLOBALS = GLOBALS
+        self.org = org
+        self.repo = repo
+
         self.tfvars_filename = None
 
     # TODO: Refactor this to use Path() instead of os.system()
@@ -41,20 +52,21 @@ class Manager:
         os.system('rm -rf .terraform')
 
     def write_tfvars_file(self,
-        GLOBALS, global_values, section_values, org, repo, environment,
+        global_values, section_values, environment,
     ):
         # This modifies section_values's keys and values, so it does not need to
         # be returned. The actual section_values dict object is unchanged, so
         # Python's pass-by-value semantics are preserved.
         self.resolve_section_values(
-            GLOBALS=GLOBALS,
             section_values=section_values,
-            org=org,
-            repo=repo,
             environment=environment,
         )
 
         output = global_values.copy()
+
+        # Allow overriding the global region on a per-section basis
+        output['region'] = output.get('region', self.GLOBALS['region'])
+
         output.update(section_values)
 
         tempfile = NamedTemporaryFile(
@@ -105,7 +117,7 @@ class Manager:
         return run_command(cmd, stream=stream_output and subcmd != 'init')
 
     def resolve_section_values(self,
-        GLOBALS, section_values, org, repo, environment,
+        section_values, environment,
     ):
         # Full walking code is at https://code.activestate.com/recipes/577982/.
         # This is adapted to walk over and modify section_values.
@@ -152,9 +164,9 @@ class Manager:
 
             if isinstance(value, LookupOutput):
                 value = value.resolve(
-                    bucket_name=GLOBALS['backend']['bucket_name'],
-                    org=org,
-                    repo=repo,
+                    bucket_name=self.GLOBALS['backend']['bucket_name'],
+                    org=self.org,
+                    repo=self.repo,
                     environment=environment,
                 )
 
@@ -163,14 +175,18 @@ class Manager:
         return section_values
 
 class AWSManager(Manager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def write_tf_backend_file(self,
-        bucket, region, dynamodb_table,
-        org, repo, environment, section,
+        environment, section,
     ):
-        key = f"terraform/state/{org}/{repo}/{environment}/{section}.tfstate"
+        bucket = self.GLOBALS['backend']['bucket_name']
+        dynamodb_table = self.GLOBALS['backend']['dynamodb_table']
+
+        region = self.GLOBALS['region']
+
+        key = f"terraform/state/{self.org}/{self.repo}/{environment}/{section}.tfstate"
 
         tempfile = NamedTemporaryFile(dir='.', prefix='boilerplate-', suffix='.tf', delete=False)
         with open(tempfile.name, 'w') as fh:
@@ -216,19 +232,20 @@ data "aws_caller_identity" "current" {{}}
 
         return os.path.basename(tempfile.name)
 
-    def save_outputs(self, bucket, org, repo, environment, section):
+    def save_outputs(self, environment, section):
+        bucket = self.GLOBALS['backend']['bucket_name']
         outputs = self.run_terraform("output",
             options=['-json'],
             suppress_input=False,
             stream_output=False,
         )
 
-        key = get_outputs_key(org, repo, environment, section)
+        key = get_outputs_key(self.org, self.repo, environment, section)
         s3 = boto3.resource('s3')
         s3.Object(bucket, key).put(Body=outputs)
 
         print(f"Outputs saved to s3://{bucket}/{key}", flush=True)
 
 class GCPManager(Manager):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

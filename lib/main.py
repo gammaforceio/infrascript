@@ -8,9 +8,9 @@ import sys
 sys.path.insert(0, '/opt/infra/lib')
 
 from infra import (
+    get_org_repo,
     load_definitions_file,
     parse_args,
-    get_org_repo,
 )
 from manager import get_manager
 
@@ -23,15 +23,13 @@ if __name__ == '__main__':
         legal_sections=SECTIONS.keys(),
     )
 
-    # TODO: Handle the None,None and the x,'' cases
-    org, repo = get_org_repo()
-
     # Set ourselves in the right directory. This simplifies the rest of the code
     # The directory is either specified in the SECTIONS definition or defaults
     # to the section name.
     os.chdir(SECTIONS[args.section].get('subdir', args.section))
 
-    manager = get_manager(GLOBALS['type'])
+    org, repo = get_org_repo()
+    manager = get_manager(GLOBALS, org, repo)
 
     manager.cleanup_boilerplate()
 
@@ -39,28 +37,18 @@ if __name__ == '__main__':
     # Specifically, when we're creating the TF backend in the first place.
     if not args.no_backend:
         manager.write_tf_backend_file(
-            region=GLOBALS['region'],
-            bucket=GLOBALS['backend']['bucket_name'],
-            dynamodb_table=GLOBALS['backend']['dynamodb_table'],
-            org=org,
-            repo=repo,
             environment=args.environment,
             section=args.section,
         )
 
     section_values = SECTIONS.get(args.section, {}).get('inputs', {})
     manager.write_tfvars_file(
-        GLOBALS=GLOBALS,
         # These are the values that all sections must handle
         global_values={
             "environment": args.environment,
-
-            # This will be used by the boilerplate aws.tf file
-            "region": section_values.get('region', GLOBALS['region']),
+            "region": section_values.get('region'),
         },
         section_values=section_values,
-        org=org,
-        repo=repo,
         environment=args.environment,
     )
 
@@ -77,9 +65,8 @@ if __name__ == '__main__':
         suppress_verbiage=suppress_verbiage,
     )
 
-    options = []
-
     suppress_input = True
+    options = []
     # Force -auto-approve otherwise terraform apply/destroy will error out.
     if args.subcmd == 'apply':
         options.append('-auto-approve')
@@ -104,9 +91,6 @@ if __name__ == '__main__':
     # TODO: Add a read_outputs() to be used when reading
     if args.subcmd == 'apply':
         manager.save_outputs(
-            bucket=GLOBALS['backend']['bucket_name'],
-            org=org,
-            repo=repo,
             environment=args.environment,
             section=args.section,
         )

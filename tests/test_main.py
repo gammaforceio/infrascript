@@ -1,3 +1,5 @@
+# vim: set ft=python:sw=4:ts=4
+
 import pytest_describe
 
 import sys

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # vim: set ft=python:sw=4:ts=4
 
 # This takes a keyword mapping of environment name and value, which could be a

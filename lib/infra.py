@@ -1,13 +1,8 @@
-#!/usr/bin/env python3
 # vim: set ft=python:sw=4:ts=4
 
 import argparse
 import os
 import sys
-
-# TODO:
-# * Create a method that writes to a tempfile and use it within
-#   write_tf_backend_file() and write_tfvars_file()
 
 # Assumptions:
 # * ???
@@ -68,6 +63,7 @@ def parse_args(legal_sections):
 
     return parser.parse_args()
 
+# TODO: Handle the None,None and the x,'' cases
 def get_org_repo():
     project = os.getenv('SCM_PROJECT')
     if project is None:
