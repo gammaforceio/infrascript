@@ -1,11 +1,13 @@
 import boto3
+from collections.abc import Mapping, Sequence, Set
+#from functools import reduce
 import json
 import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from infra import _resolve_section_values
-from lookup_output import get_outputs_key
+from lookup_output import LookupOutput, get_outputs_key
+from per_environment import PerEnvironment
 
 # TODO: This needs to handle and propagate failure
 def run_command(cmd, stream=False):
@@ -44,7 +46,7 @@ class Manager:
         # This modifies section_values's keys and values, so it does not need to
         # be returned. The actual section_values dict object is unchanged, so
         # Python's pass-by-value semantics are preserved.
-        _resolve_section_values(
+        self.resolve_section_values(
             GLOBALS=GLOBALS,
             section_values=section_values,
             org=org,
@@ -101,6 +103,64 @@ class Manager:
             print(f"Running {subcmd}", flush=True)
 
         return run_command(cmd, stream=stream_output and subcmd != 'init')
+
+    def resolve_section_values(self,
+        GLOBALS, section_values, org, repo, environment,
+    ):
+        # Full walking code is at https://code.activestate.com/recipes/577982/.
+        # This is adapted to walk over and modify section_values.
+        string_types = (str, bytes)
+        iteritems = lambda x: getattr(x, 'iteritems', x.items)()
+        def __walk(obj, path=(), memo=None):
+            if memo is None:
+                memo = set()
+            iterator = None
+            if isinstance(obj, Mapping):
+                iterator = iteritems
+            elif isinstance(obj, (Sequence, Set)) and not isinstance(obj, string_types):
+                iterator = enumerate
+            if iterator:
+                if id(obj) not in memo:
+                    memo.add(id(obj))
+                    for key, value in iterator(obj):
+                        for result in __walk(value, path+(key,), memo):
+                            yield result
+                    memo.remove(id(obj))
+            else:
+                yield path, obj
+
+        # This is unused, but provided for completeness
+        # def __get(obj, keys):
+        #     return reduce(lambda c,k: c.get(k, {}), keys, obj)
+        def __set(obj, keys, value):
+            keys = list(keys)
+            k = keys.pop(0)
+            while len(keys) > 0:
+                obj = obj[k]
+                k = keys.pop(0)
+            obj[k] = value
+
+        # Resolve values in this order:
+        #   1. PerEnvironment
+        #   2. LookupOutput
+        # This allows PerEnvironment objects to reference LookupOutput objects.
+        for path, value in __walk(section_values):
+            if isinstance(value, PerEnvironment):
+                value = value.resolve(
+                    environment=environment,
+                )
+
+            if isinstance(value, LookupOutput):
+                value = value.resolve(
+                    bucket_name=GLOBALS['backend']['bucket_name'],
+                    org=org,
+                    repo=repo,
+                    environment=environment,
+                )
+
+            __set(section_values, path, value)
+
+        return section_values
 
 class AWSManager(Manager):
     def __init__(self):

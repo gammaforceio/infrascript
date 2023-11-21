@@ -5,7 +5,9 @@ sys.path.insert(0, '/opt/infra/lib')
 
 from infra import (
     get_org_repo,
-    _resolve_section_values,
+)
+from manager import (
+    get_manager,
 )
 from lookup_output import (
     LookupOutput,
@@ -43,7 +45,8 @@ def describe_get_org_repo():
 
 def describe_resolve_section_values():
     def _run_resolve_section_values(section_values):
-        _resolve_section_values(
+        manager = get_manager('aws')
+        manager.resolve_section_values(
             section_values=section_values,
             GLOBALS={
                 'backend': {
