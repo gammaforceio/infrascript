@@ -1,11 +1,11 @@
 # vim: set ft=python:sw=4:ts=4
 
 import pytest
-import pytest_describe
 
-import sys
-sys.path.insert(0, '/opt/infra/lib')
-from per_environment import EnvironmentNotFoundError, PerEnvironment
+from infrascript.per_environment import (
+    EnvironmentNotFoundError,
+    PerEnvironment,
+)
 
 def describe_PerEnvironment():
     def environment_found():

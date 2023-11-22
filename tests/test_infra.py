@@ -1,20 +1,15 @@
 # vim: set ft=python:sw=4:ts=4
 
-import pytest_describe
-
-import sys
-sys.path.insert(0, '/opt/infra/lib')
-
-from infra import (
+from infrascript.infra import (
     get_org_repo,
 )
-from manager import (
+from infrascript.manager import (
     get_manager,
 )
-from lookup_output import (
+from infrascript.lookup_output import (
     LookupOutput,
 )
-from per_environment import (
+from infrascript.per_environment import (
     PerEnvironment,
 )
 

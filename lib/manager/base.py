@@ -1,42 +1,14 @@
 # vim: set ft=python:sw=4:ts=4
 
-import boto3
 from collections.abc import Mapping, Sequence, Set
 #from functools import reduce
 import json
 import os
-import subprocess
-from tempfile import NamedTemporaryFile
 
-# TODO:
-# * Create a method that writes to a tempfile and use it within
-#   write_tf_backend_file() and write_tfvars_file()
-
-from lookup_output import LookupOutput, get_outputs_key
-from per_environment import PerEnvironment
-
-# TODO: This needs to handle and propagate failure
-def run_command(cmd, stream=False):
-    # We want to stream the results back to the user. We want to return
-    # success or failure to the invoker.
-    if stream:
-        return subprocess.run(
-            cmd,
-            capture_output=False,
-        )
-    # We're not streaming, so capture and return the output to the invoker.
-    else:
-        return subprocess.Popen(
-            cmd, stdout=subprocess.PIPE,
-        ).communicate()[0].rstrip().decode('utf-8')
-
-def get_manager(GLOBALS, org, repo):
-    iaas = GLOBALS['type'].lower()
-    if iaas == 'aws':
-        return AWSManager(GLOBALS, org, repo)
-    if iaas == 'gcp':
-        return GCPManager(GLOBALS, org, repo)
-    raise ValueError(f"Unknown IaaS: {iaas}")
+from ..command import run_command
+from ..lookup_output import LookupOutput, get_outputs_key
+from ..per_environment import PerEnvironment
+from ..tempfile import write_to_named_tempfile
 
 class Manager:
     def __init__(self, GLOBALS, org, repo):
@@ -69,17 +41,10 @@ class Manager:
 
         output.update(section_values)
 
-        tempfile = NamedTemporaryFile(
-            dir='.',
-            prefix='boilerplate-',
+        self.tfvars_filename = write_to_named_tempfile(
+            json.dumps(output),
             suffix='.tfvars.json',
-            delete=False,
         )
-        with open(tempfile.name, 'w') as fh:
-            json.dump(output, fh)
-            fh.flush()
-
-        self.tfvars_filename = os.path.basename(tempfile.name)
 
     # q.v. https://learn.hashicorp.com/tutorials/terraform/automate-terraform
     def run_terraform(self,
@@ -174,64 +139,6 @@ class Manager:
 
         return section_values
 
-class AWSManager(Manager):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def write_tf_backend_file(self,
-        environment, section,
-    ):
-        bucket = self.GLOBALS['backend']['bucket_name']
-        dynamodb_table = self.GLOBALS['backend']['dynamodb_table']
-
-        region = self.GLOBALS['region']
-
-        key = f"terraform/state/{self.org}/{self.repo}/{environment}/{section}.tfstate"
-
-        tempfile = NamedTemporaryFile(dir='.', prefix='boilerplate-', suffix='.tf', delete=False)
-        with open(tempfile.name, 'w') as fh:
-            # The doubled-braces are to handle how f-strings deal with them.
-            # Otherwise, this will be a syntax error.
-            fh.write(f"""
-terraform {{
-    backend "s3" {{
-        bucket = "{bucket}"
-        key = "{key}"
-        region = "{region}"
-        dynamodb_table = "{dynamodb_table}"
-    }}
-}}
-            """)
-            fh.flush()
-
-        return os.path.basename(tempfile.name)
-
-    def write_awstf_file(self):
-        tempfile = NamedTemporaryFile(
-            dir='.',
-            prefix='boilerplate-',
-            suffix='.tf',
-            delete=False,
-        )
-        with open(tempfile.name, 'w') as fh:
-            # The doubled-braces are to handle how f-strings deal with them.
-            # Otherwise, this will be a syntax error.
-            fh.write(f"""
-variable "region" {{
-    type = string
-    nullable = false
-}}
-
-provider aws {{
-    region = var.region
-}}
-
-data "aws_caller_identity" "current" {{}}
-            """)
-            fh.flush()
-
-        return os.path.basename(tempfile.name)
-
     def save_outputs(self, environment, section):
         bucket = self.GLOBALS['backend']['bucket_name']
         outputs = self.run_terraform("output",
@@ -241,11 +148,5 @@ data "aws_caller_identity" "current" {{}}
         )
 
         key = get_outputs_key(self.org, self.repo, environment, section)
-        s3 = boto3.resource('s3')
-        s3.Object(bucket, key).put(Body=outputs)
 
-        print(f"Outputs saved to s3://{bucket}/{key}", flush=True)
-
-class GCPManager(Manager):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.write_to_bucket(bucket, key, content=outputs)

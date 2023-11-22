@@ -29,3 +29,7 @@ class LookupOutput(object):
 class LookupOutputAWS(LookupOutput):
     def __resource(self):
         return boto3.resource('s3')
+
+class LookupOutputGCP(LookupOutput):
+    def __resource(self):
+        return boto3.resource('s3') # Add endpoints here

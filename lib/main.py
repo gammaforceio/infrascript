@@ -1,18 +1,17 @@
-#!/usr/bin/env python3
 # vim: set ft=python:sw=4:ts=4
 
 import os
 import sys
 
 # This location is set within the Dockerfile.
-sys.path.insert(0, '/opt/infra/lib')
+sys.path.insert(0, '/opt/infra/infrascript')
 
-from infra import (
+from .infra import (
     get_org_repo,
     load_definitions_file,
     parse_args,
 )
-from manager import get_manager
+from .manager import get_manager
 
 if __name__ == '__main__':
     # TODO: Ensure the IaaS (AWS/GCP) envvars are set
@@ -51,8 +50,7 @@ if __name__ == '__main__':
         section_values=section_values,
         environment=args.environment,
     )
-
-    manager.write_awstf_file()
+    manager.write_provider_tf_file()
 
     # The output subcommand's STDOUT needs to be parseable as JSON.
     suppress_verbiage = False
