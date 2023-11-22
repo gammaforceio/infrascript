@@ -27,8 +27,10 @@ The infra scripting product
 This is the file which controls how `infra` knows what to do.
 
 ```
-from lookup_output import LookupOutput
-from per_environment import PerEnvironment
+from infrascript import (
+    LookupOutput,
+    PerEnvironment,
+)
 
 GLOBALS = {
     'region': <region>,

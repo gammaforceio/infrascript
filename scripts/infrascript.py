@@ -4,14 +4,14 @@ import os
 import sys
 
 # This location is set within the Dockerfile.
-sys.path.insert(0, '/opt/infra/infrascript')
+sys.path.insert(0, '/opt/gammaforce')
 
-from .infra import (
+from infrascript.infra import (
     get_org_repo,
     load_definitions_file,
     parse_args,
 )
-from .manager import get_manager
+from infrascript.manager import get_manager
 
 if __name__ == '__main__':
     # TODO: Ensure the IaaS (AWS/GCP) envvars are set

@@ -3,4 +3,4 @@
 import pytest_describe
 
 import sys
-sys.path.insert(0, '/opt/infra')
+sys.path.insert(0, '/opt/gammaforce')
