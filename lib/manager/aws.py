@@ -48,6 +48,9 @@ provider aws {{
 data "aws_caller_identity" "current" {{}}
         """, suffix='.tf')
 
+    def read_from_bucket(self, bucket, key):
+        return boto3.resource('s3').Object(bucket_name, key).get()['Body'].read().decode('utf-8')
+
     def write_to_bucket(self, bucket, key, content):
         boto3.resource('s3').Object(bucket, key).put(Body=content)
         print(f"Outputs saved to s3://{bucket}/{key}", flush=True)

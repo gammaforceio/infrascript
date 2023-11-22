@@ -9,13 +9,13 @@
 # Infrascript::EnvironmentNotFound exception will be thrown.
 
 class EnvironmentNotFoundError(Exception):
-        pass
+    pass
 
 class PerEnvironment(object):
     def __init__(self, **kwargs):
         self._envmap = kwargs
 
-    def resolve(self, environment):
+    def resolve(self, manager, environment):
         if environment in self._envmap:
             return self._envmap[environment]
 

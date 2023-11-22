@@ -124,15 +124,17 @@ class Manager:
         for path, value in __walk(section_values):
             if isinstance(value, PerEnvironment):
                 value = value.resolve(
+                    manager=self,
                     environment=environment,
                 )
 
             if isinstance(value, LookupOutput):
                 value = value.resolve(
+                    manager=self,
+                    environment=environment,
                     bucket_name=self.GLOBALS['backend']['bucket_name'],
                     org=self.org,
                     repo=self.repo,
-                    environment=environment,
                 )
 
             __set(section_values, path, value)
@@ -141,12 +143,11 @@ class Manager:
 
     def save_outputs(self, environment, section):
         bucket = self.GLOBALS['backend']['bucket_name']
+        key = get_outputs_key(self.org, self.repo, environment, section)
         outputs = self.run_terraform("output",
             options=['-json'],
             suppress_input=False,
             stream_output=False,
         )
-
-        key = get_outputs_key(self.org, self.repo, environment, section)
 
         self.write_to_bucket(bucket, key, content=outputs)

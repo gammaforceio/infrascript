@@ -12,5 +12,8 @@ class GCPManager(Manager):
     def write_provider_tf_file(self, bucket, key, contents):
         raise NotImplemented("GCPManager.write_provider_tf_file()")
 
+    def read_from_bucket(self, bucket, key):
+        raise NotImplemented("GCPManager.read_from_bucket()")
+
     def write_to_bucket(self, bucket, key, contents):
         raise NotImplemented("GCPManager.write_to_bucket()")

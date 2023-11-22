@@ -1,6 +1,5 @@
 # vim: set ft=python:sw=4:ts=4
 
-import boto3
 import json
 
 def get_outputs_key(org, repo, environment, section):
@@ -14,22 +13,13 @@ class LookupOutput(object):
         self.section = section
         self.key = key
 
-    def resolve(self, bucket_name, org, repo, environment):
+    def resolve(self, manager, bucket_name, org, repo, environment):
         key = get_outputs_key(
             self.org or org,
             self.repo or repo,
             self.environment or environment,
             self.section,
         )
-        resource = self.__resource()
-        blob = resource.Object(bucket_name, key).get()['Body'].read().decode('utf-8')
+        blob = manager.read_from_bucket(bucket_name, key)
         data = json.loads(blob)
         return data.get(self.key, {}).get('value')
-
-class LookupOutputAWS(LookupOutput):
-    def __resource(self):
-        return boto3.resource('s3')
-
-class LookupOutputGCP(LookupOutput):
-    def __resource(self):
-        return boto3.resource('s3') # Add endpoints here

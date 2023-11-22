@@ -83,7 +83,7 @@ def describe_resolve_section_values():
         assert section_values == { 'x': { 'y': 1 } }
 
     def lookup_output(monkeypatch):
-        def myresolve(self, bucket_name, org, repo, environment):
+        def myresolve(self, manager, bucket_name, org, repo, environment):
             return 'value1'
         monkeypatch.setattr(LookupOutput, 'resolve', myresolve)
 
@@ -99,7 +99,7 @@ def describe_resolve_section_values():
         assert section_values == { 'x': 'value1' }
 
     def lookup_output_2_levels_dict(monkeypatch):
-        def myresolve(self, bucket_name, org, repo, environment):
+        def myresolve(self, manager, bucket_name, org, repo, environment):
             return 'value1'
         monkeypatch.setattr(LookupOutput, 'resolve', myresolve)
 
@@ -117,7 +117,7 @@ def describe_resolve_section_values():
         assert section_values == { 'x': { 'y': 'value1' } }
 
     def lookup_output_2_levels_list(monkeypatch):
-        def myresolve(self, bucket_name, org, repo, environment):
+        def myresolve(self, manager, bucket_name, org, repo, environment):
             return 'value1'
         monkeypatch.setattr(LookupOutput, 'resolve', myresolve)
 
@@ -157,7 +157,7 @@ def describe_resolve_section_values():
         assert section_values == { 'x': 1 }
 
     def per_environment_lookup_output(monkeypatch):
-        def myresolve(self, bucket_name, org, repo, environment):
+        def myresolve(self, manager, bucket_name, org, repo, environment):
             return 'value1'
         monkeypatch.setattr(LookupOutput, 'resolve', myresolve)
 
