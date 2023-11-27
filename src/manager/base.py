@@ -60,7 +60,7 @@ class Manager:
             cmd.append('-force-copy')
         elif suppress_input:
             # We're running in automation, so always suppress -input
-            # TODO: Figure out why this broke using --no-backend / --reconfigure
+            # TODO: Figure out why this broke using --reconfigure
             cmd.append('-input=false')
 
         cmd = cmd + options

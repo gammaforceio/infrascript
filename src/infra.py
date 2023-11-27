@@ -53,16 +53,6 @@ def load_definitions_file():
 
     return GLOBALS, SECTIONS
 
-def parse_args(legal_sections):
-    parser = argparse.ArgumentParser(description='Run infrastructure stuff')
-    parser.add_argument('subcmd', help='Terraform subcommand', choices=['plan', 'apply', 'destroy', 'output'])
-    parser.add_argument('section', help="what are we subcmd'ing?", choices=legal_sections)
-    parser.add_argument('--no-backend', action='store_true', help='skip TF backend')
-    parser.add_argument('--reconfigure', action='store_true', help='Reconfigure state (used only when creating the TF backend')
-    parser.add_argument('--environment', default='prod', help='Environment (default: prod)')
-
-    return parser.parse_args()
-
 # TODO: Handle the None,None and the x,'' cases
 def get_org_repo():
     project = os.getenv('SCM_PROJECT')
