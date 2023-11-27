@@ -13,44 +13,101 @@ from infrascript.infra import (
 )
 from infrascript.manager import get_manager
 
-def plan(section, environment='prod'):
-    return tf_cmd('plan', section, environment)
-def apply(section, environment='prod'):
-    return tf_cmd('apply', section, environment)
-def destroy(section, environment='prod'):
-    return tf_cmd('destroy', section, environment)
-def output(section, environment='prod'):
-    return tf_cmd('output', section, environment)
+# TODO:
+# * Need to add subcommands to:
+#   * Check if it exists
+#   * Apply/Update
+#   * Destroy
+#
+# TEST THE APPLY CODE IN GFBF
+#
+def bootstrap(subcmd):
+    if subcmd not in ['plan', 'apply', 'destroy']:
+        print(f"{subcmd} not in ('plan', 'apply', 'destroy')", file=sys.stderr)
+        sys.exit(1)
 
-def tf_cmd(subcmd, section, environment, reconfigure=False):
-    # TODO: Ensure the IaaS (AWS/GCP) envvars are set
+    section = '__bootstrap__'
+    environment = 'prod'
 
     GLOBALS, SECTIONS = load_definitions_file()
+    iaas = GLOBALS['type'].lower()
+
+    # Delegate this to the manager object?
+    SECTIONS = {
+        section: {
+            'inputs': {
+                'bucket_name': GLOBALS['backend']['bucket_name'],
+                'dynamodb_table': GLOBALS['backend']['dynamodb_table'],
+            },
+            'subdir': f"/opt/gammaforce/resources/bootstrap/{iaas}",
+        },
+    }
+
+    # TODO:
+    # * Need to distinguish between plan without anything build and plan with
+    #   stuff built (with_backend=False vs. True)
+    # * Need to handle failures in the first apply command so that it's not
+    #   propagated to the second
+    # * Need to distinguish between apply without anything built (first apply)
+    #   and apply to update (with stuff built)
+    if subcmd == 'plan':
+        tf_cmd('plan', section, environment, GLOBALS, SECTIONS)
+    elif subcmd == 'apply':
+        tf_cmd('apply', section, environment, GLOBALS, SECTIONS, with_backend=False)
+        tf_cmd('apply', section, environment, GLOBALS, SECTIONS, reconfigure=True)
+    elif subcmd == 'destroy':
+        tf_cmd('destroy', section, environment, GLOBALS, SECTIONS)
+
+    return
+
+def plan(section, environment='prod'):
+    GLOBALS, SECTIONS = load_definitions_file()
+    return tf_cmd('plan', section, environment, GLOBALS, SECTIONS)
+def apply(section, environment='prod'):
+    GLOBALS, SECTIONS = load_definitions_file()
+    return tf_cmd('apply', section, environment, GLOBALS, SECTIONS)
+def destroy(section, environment='prod'):
+    GLOBALS, SECTIONS = load_definitions_file()
+    return tf_cmd('destroy', section, environment, GLOBALS, SECTIONS)
+def output(section, environment='prod'):
+    GLOBALS, SECTIONS = load_definitions_file()
+    return tf_cmd('output', section, environment, GLOBALS, SECTIONS)
+
+def tf_cmd(
+    subcmd,
+    section,
+    environment,
+    GLOBALS,
+    SECTIONS,
+    with_backend=True,
+    reconfigure=False,
+):
+    # TODO: Ensure the IaaS (AWS/GCP) envvars are set
 
     # TODO: Verify the section parameter
 
     # Set ourselves in the right directory. This simplifies the rest of the code
     # The directory is either specified in the SECTIONS definition or defaults
     # to the section name.
-    os.chdir(SECTIONS[section].get('subdir', section))
-
+    os.chdir(SECTIONS.get(section, {}).get('subdir', section))
 
     org, repo = get_org_repo()
     manager = get_manager(GLOBALS, org, repo)
 
     manager.cleanup_boilerplate()
 
-    manager.write_tf_backend_file(
-        environment=environment,
-        section=section,
-    )
+    if with_backend:
+        manager.write_tf_backend_file(
+            environment=environment,
+            section=section,
+        )
 
     section_values = SECTIONS.get(section, {}).get('inputs', {})
     manager.write_tfvars_file(
         # These are the values that all sections must handle
         global_values={
             "environment": environment,
-            "region": section_values.get('region'),
+            "region": GLOBALS.get('region', section_values.get('region')),
         },
         section_values=section_values,
         environment=environment,
@@ -106,6 +163,7 @@ def tf_cmd(subcmd, section, environment, reconfigure=False):
 
 if __name__ == '__main__':
     fire.Fire({
+        'bootstrap': bootstrap,
         'plan': plan,
         'apply': apply,
         'destroy': destroy,

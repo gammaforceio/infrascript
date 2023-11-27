@@ -7,6 +7,7 @@ import sys
 # Assumptions:
 # * ???
 def load_definitions_file():
+    # TODO: Is this necessary within the Docker container?
     # We have to add the current directory to the module search path because
     # even though "." is appended, that's the directory the script was executed
     # from. We've already changed directory once, so make sure we have the
@@ -16,8 +17,11 @@ def load_definitions_file():
     # This is a file we require to exist in order for this script to know what
     # to do. It must live in the infra/ directory.
     #
-    # TODO: Make sure this file exists, compiles properly, and provides these
-    # data structures.
+    # TODO:
+    # * Make sure
+    #   * this file exists
+    #   * compiles properly
+    # * Allow this filename to be set
     from definitions import GLOBALS, SECTIONS
 
     have_error = False
@@ -46,7 +50,12 @@ def load_definitions_file():
             if 'bucket_name' not in GLOBALS['backend']:
                 print("bucket_name not set in GLOBALS['backend']", file=sys.stderr)
                 have_error = True
-    # TODO: Verify that 'region' is set and has a correct value for 'type'
+
+    # TODO Verify that:
+    # * GLOBALS['region'] is set and has a correct value for 'type'
+    # * each SECTION in SECTIONS has:
+    #   * inputs doesn't exist or is a dict whose values are correct
+    #   * (subdir, key) is a subdirectory
 
     if have_error:
         sys.exit(1)

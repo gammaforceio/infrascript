@@ -34,6 +34,7 @@ from infrascript import (
 
 GLOBALS = {
     'region': <region>,
+    'type': <AWS | GCP>,
     'backend': {
         'bucket_name': <Terraform S3 bucket>,
         'dynamodb_table': <Terraform Locking table>,
@@ -50,11 +51,20 @@ SECTIONS = {
 }
 ```
 
+The `GLOBALS` dict defines the Terraform backend used to store the tfstate and
+to do manage `LookupOutput` resolution. It does **NOT** limit you to only having
+resources from that IaaS provider.
+
+Currently, the backends supported are AWS ang GCP.
+
+The `SECTIONS` dict defines the various Terraform sections within this
+repository managed by infrascript.
+
 # Standard invocation
 
 This command is packaged as a Docker image. To function properly, it requires
 that you invoke it with the necessary parameters. The reasons for each will
-be explained below.
+be explained below. An example invocation script is at [invoke.sh](invoke.sh).
 
 ```
 docker run --rm \
@@ -98,9 +108,9 @@ The `invoke` script within this repository does everything necessary.
 This has only been tested on \*nix-like systems, like Linux and OSX. This has
 **not** been tested in any ways on Windows.
 
-## AWS only
+## AWS/GCP only
 
-This _should_ work in Azure and GCP, but has not been tested outside of AWS.
+This _should_ work in Azure, but has not been tested outside of AWS or GCP.
 It only uses Terraform commands, and so should function properly.
 
 # Contributing
