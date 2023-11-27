@@ -1,5 +1,20 @@
 # CHANGELOG
 
+* 0.2.0 (2023-11-26)
+
+Interface:
+  * THIS RELEASE HAS POTENTIALLY-BREAKING CHANGES!!
+  * Imports of `LookupOutput` and `PerEnvironment` are now `from infrascript`.
+  * Added support for GCS as a backend store.
+    * This adds a `'type': 'AWS' | 'GCP'` in `GLOBALS`
+      * The default is 'AWS'
+  * Added a `bootstrap` subcommand with its own subcommands
+    * This will manage all the necessary infrastructure for storing tfstate
+
+Internals:
+  * Significant refactoring of internals to support AWS/GCP separation.
+  * The Docker image layout has changed quite a bit.
+
 * 0.1.3 (2022-05-03)
 
 Boilerplate the aws.tf file
